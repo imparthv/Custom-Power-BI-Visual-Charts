@@ -73,6 +73,7 @@ export class Visual implements IVisual {
 
         this.handleLandingPage(options);
 
+        // filtering suitable parsing methods and visual methods based on metadata structure
         if (!options.dataViews[0].categorical.values.source) {
             // fetch suitable formatted data for the generating visual
             var chartData = this.parseSimpleChartData(options.dataViews[0]);
