@@ -32,7 +32,7 @@ import { VisualFormattingSettingsModel } from "./settings";
 
 // Interface for structuring data
 export interface ChartDataPoints {
-    category: string;
+    category: string,
     value: any
 }
 
@@ -101,12 +101,12 @@ export class Visual implements IVisual {
             }
             else {
                 var chartData = this.parseLegendSimpleChartData(options.dataViews[0]);
-                var categoryTitle = options.dataViews[0].categorical.values.source.displayName
+                var categoryTitle = options.dataViews[0].categorical.values.source.displayName;
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
-                    this.generateColumnChart(chartData, options, categoryTitle, true)
+                    this.generateColumnChart(chartData, options, categoryTitle, true);
                 }
                 else {
-                    this.generateBarChart(chartData, options, categoryTitle, true)
+                    this.generateBarChart(chartData, options, categoryTitle, true);
                 }
             }
 
@@ -174,8 +174,8 @@ export class Visual implements IVisual {
 
         // If legend is sought generate colors for columns
         // Generating color palette for subcategories
-        let colorStack: string[] = []
-        let subCategories: string[] = []
+        let colorStack: string[] = [];
+        let subCategories: string[] = [];
         if (isLegend) {
             let colorPalette: IColorPalette = this.host.colorPalette;
             Object.keys(visualChartData).forEach((value) => {
@@ -353,7 +353,7 @@ export class Visual implements IVisual {
                 .attr("x", d => xScaleColumn(d.category) + xScaleColumn.bandwidth() / 8)
                 .attr("y", d => yScaleColumn(d.value) - 20)
                 .attr("dy", ".75em")
-                .text(d => iValueFormatter.format(d.value))
+                .text(d => iValueFormatter.format(d.value));
         }
 
         // Add tooltip
@@ -380,8 +380,8 @@ export class Visual implements IVisual {
 
         // If legend is sought generate colors for columns
         // Generating color palette for subcategories
-        let colorStack: string[] = []
-        let subCategories: string[] = []
+        let colorStack: string[] = [];
+        let subCategories: string[] = [];
         if (isLegend) {
             let colorPalette: IColorPalette = this.host.colorPalette;
             Object.keys(visualChartData).forEach((value) => {
@@ -390,7 +390,7 @@ export class Visual implements IVisual {
 
             visualChartData.forEach((element) => {
                 subCategories.push(element.category);
-            })
+            });
         }
 
         // Formatting values
@@ -560,7 +560,7 @@ export class Visual implements IVisual {
                 .attr("x", d => xScaleBar(d.value) - 20)
                 .attr("dx", "3em")
                 .attr("dy", "1.5em")
-                .text(d => iValueFormatter.format(d.value))
+                .text(d => iValueFormatter.format(d.value));
         }
 
         // Add tooltip to the chart
@@ -589,7 +589,7 @@ export class Visual implements IVisual {
             visualChartDataPoints.push({
                 category: value.source.groupName.toString(),
                 value: value.values[0] as number
-            })
+            });
         })
 
         return visualChartDataPoints;
@@ -618,7 +618,7 @@ export class Visual implements IVisual {
         // [{category:value, subcategory1:value, subcategory2:value, ...}, ...] format
         const formattedVisualData = visualChartData.map(item => {
             const category = item.category;
-            const values = { ...item.value }
+            const values = { ...item.value };
             return { category, ...values };
         });
 
@@ -627,7 +627,7 @@ export class Visual implements IVisual {
 
         // Generating color palette for subcategories
         let colorPalette: IColorPalette = this.host.colorPalette;
-        let colorStack: string[] = []
+        let colorStack: string[] = [];
         Object.keys(subCategories).forEach((value) => {
             colorStack.push(colorPalette.getColor(value).value);
         });
@@ -798,7 +798,7 @@ export class Visual implements IVisual {
         // Converting data to suitable format for stacking and further formatting
         const formattedVisualData = visualChartData.map(item => {
             const category = item.category;
-            const values = { ...item.value }
+            const values = { ...item.value };
             return { category, ...values };
         })
 
@@ -1007,7 +1007,7 @@ export class Visual implements IVisual {
             .data(innerCategories)
             .enter().append("g")
             .attr("class", "legend")
-            .attr("transform", function (d, i) { return "translate(" + i * 100 + ", -20)" })
+            .attr("transform", function (d, i) { return "translate(" + i * 100 + ", -20)" });
 
         legend.append("circle")
             .attr("x", 20)
