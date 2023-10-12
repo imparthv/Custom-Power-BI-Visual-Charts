@@ -34,3 +34,27 @@ It helps users understand which colors or patterns correspond to specific data s
 
 
 ### Supports various data sources and transformations.
+
+
+## Commit Convention
+
+
+### Specify the type of commit
+
+
+1.**feat**: The new feature you're adding
+
+
+2.**fix**: A bug fix
+
+
+3.**style**: Feature and updates related to styling
+
+
+4.**refactor**: Refactoring a specific section of the codebase
+
+
+5.**docs**: Everything related to documentation
+
+
+6.**chore**: Regular code maintenance.
