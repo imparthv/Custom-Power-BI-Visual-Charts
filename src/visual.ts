@@ -1035,7 +1035,6 @@ export class Visual implements IVisual {
         }
     }
 
-
     // Method for tooltip
     private viewTooltip(visualChartData: ChartDataPoints[]) {
         this.svg.selectAll("rect").on("mouseover", function (event, data) {
