@@ -48,7 +48,6 @@ export class DataPointCardSettings extends FormattingSettingsCard {
     public slices: FormattingSettingsSlice[] = [this.fontSize, this.fontFamily, this.fontColor, this.defaultStackedBarChart, this.showDataLabels, this.showAxisLabels];
 }
 
-
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     public dataPointCard: DataPointCardSettings = new DataPointCardSettings();
     public cards: formattingSettings.Card[] = [this.dataPointCard];
