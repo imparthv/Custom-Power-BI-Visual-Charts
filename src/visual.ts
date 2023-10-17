@@ -10,7 +10,6 @@ import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel
 // Importing Formatting Utils
 import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
 
-
 // Importing custom styles
 import "./../style/visual.less";
 
@@ -51,6 +50,7 @@ export class Visual implements IVisual {
 
     // Initialising SVG element that will hold the visual
     private svg: d3.Selection<SVGElement, any, any, any>;
+    private margin = { top: 20, right: 20, bottom: 40, left: 50 };
 
     constructor(options: VisualConstructorOptions) {
         this.formattingSettingsService = new FormattingSettingsService();
@@ -62,7 +62,6 @@ export class Visual implements IVisual {
         this.svg = d3.select(options.element)
             .append("svg")
             .classed("custom-chart", true);
-
     }
 
     public update(options: VisualUpdateOptions) {
@@ -71,7 +70,12 @@ export class Visual implements IVisual {
         this.formattingSettings.dataPointCard.fontSize.value = Math.max(10, this.formattingSettings.dataPointCard.fontSize.value);
         this.formattingSettings.dataPointCard.fontSize.value = Math.min(14, this.formattingSettings.dataPointCard.fontSize.value)
 
+        // Handling landing page
         this.handleLandingPage(options);
+
+        // Setting width and height
+        var width = options.viewport.width;
+        var height = options.viewport.height;
 
         // filtering suitable parsing methods and visual methods based on metadata structure
         if (!options.dataViews[0].categorical.values.source) {
@@ -79,11 +83,11 @@ export class Visual implements IVisual {
             var chartData = this.parseSimpleChartData(options.dataViews[0]);
             // column chart
             if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
-                this.generateColumnChart(chartData, options);
+                this.generateColumnChart(width, height, chartData, options);
             }
             // bar chart
             else {
-                this.generateBarChart(chartData, options);
+                this.generateBarChart(width, height, chartData, options);
             }
         }
 
@@ -93,26 +97,24 @@ export class Visual implements IVisual {
                 var legendChartData = this.parseStackedChartData(options.dataViews[0]);
                 var subCategoryTitle = options.dataViews[0].metadata.columns[2].displayName
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
-                    this.generateStackedColumnChart(legendChartData, options, subCategoryTitle);
+                    this.generateStackedColumnChart(width, height, legendChartData, options, subCategoryTitle);
                 }
                 else {
-                    this.generateStackedBarChart(legendChartData, options, subCategoryTitle);
+                    this.generateStackedBarChart(width, height, legendChartData, options, subCategoryTitle);
                 }
             }
             else {
                 var chartData = this.parseLegendSimpleChartData(options.dataViews[0]);
                 var categoryTitle = options.dataViews[0].categorical.values.source.displayName;
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
-                    this.generateColumnChart(chartData, options, categoryTitle, true);
+                    this.generateColumnChart(width, height, chartData, options, categoryTitle, true);
                 }
                 else {
-                    this.generateBarChart(chartData, options, categoryTitle, true);
+                    this.generateBarChart(width, height, chartData, options, categoryTitle, true);
                 }
             }
 
         }
-
-        this.svg.exit().remove();
     }
 
     // Method to generate landing page
@@ -154,23 +156,18 @@ export class Visual implements IVisual {
     }
 
 
-    private generateColumnChart(visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
+    private generateColumnChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
         // clearing previous format
         this.svg.selectAll("*").remove();
 
-        // set width and height
-        var width = options.viewport.width;
-        var height = options.viewport.height;
-
-        var margin = { top: 20, right: 20, bottom: 40, left: 50 };
-        var innerWidth = width - margin.left - margin.right;
-        var innerHeight = height - margin.top - margin.bottom;
+        var innerWidth = width - this.margin.left - this.margin.right;
+        var innerHeight = height - this.margin.top - this.margin.bottom;
 
         var svg = this.svg
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', "translate(" + margin.left + ", " + margin.top + ")");
+            .attr('transform', "translate(" + this.margin.left + ", " + this.margin.top + ")");
 
         // If legend is sought generate colors for columns
         // Generating color palette for subcategories
@@ -281,7 +278,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'x-axis-label')
                 .attr('x', innerWidth / 2)
-                .attr('y', innerHeight + margin.bottom - 2)
+                .attr('y', innerHeight + this.margin.bottom - 2)
                 .style('text-anchor', 'middle')
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
@@ -292,7 +289,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'y-axis-label')
                 .attr('x', -innerHeight / 2)
-                .attr('y', -margin.left * 0.8)
+                .attr('y', -this.margin.left * 0.8)
                 .style('text-anchor', 'middle')
                 .attr('transform', 'rotate(-90)')
                 .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
@@ -360,23 +357,18 @@ export class Visual implements IVisual {
         this.viewTooltip(visualChartData);
     }
 
-    private generateBarChart(visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
+    private generateBarChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
         // clearing previous format
         this.svg.selectAll("*").remove();
 
-        // set width and height
-        var width = options.viewport.width;
-        var height = options.viewport.height;
-
-        var margin = { top: 20, right: 20, bottom: 40, left: 50 };
-        var innerWidth = width - margin.left - margin.right;
-        var innerHeight = height - margin.top - margin.bottom;
+        var innerWidth = width - this.margin.left - this.margin.right;
+        var innerHeight = height - this.margin.top - this.margin.bottom;
 
         var svg = this.svg
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', "translate(" + margin.left + "," + margin.top + ")");
+            .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
 
         // If legend is sought generate colors for columns
         // Generating color palette for subcategories
@@ -405,7 +397,7 @@ export class Visual implements IVisual {
             .domain([minValue, d3.max(visualChartData, d => d.value)])
             .range([0, innerWidth - 70]);
 
-        // draw x axis
+        // draw x axis and set tick numbers based on the width of the viewport
         if (width < 300) {
             svg.append("g")
                 .attr("class", "x-axis-bar-chart")
@@ -439,7 +431,7 @@ export class Visual implements IVisual {
             .padding(0.4)
             .paddingInner(0.5);
 
-        // draw y axis
+        // draw y axis and set label length based on height of the viewport
         svg.append("g")
             .attr('transform', "translate(20,0)")
             .attr("class", "y-axis-bar-chart")
@@ -487,7 +479,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'x-axis-label')
                 .attr('x', innerWidth / 2)
-                .attr('y', innerHeight + margin.bottom - 5)
+                .attr('y', innerHeight + this.margin.bottom - 5)
                 .style('text-anchor', 'middle')
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
@@ -498,7 +490,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'y-axis-label')
                 .attr('x', -innerHeight / 2)
-                .attr('y', -margin.left * 0.8)
+                .attr('y', -this.margin.left * 0.8)
                 .style('text-anchor', 'middle')
                 .attr('transform', 'rotate(-90)')
                 .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
@@ -596,23 +588,18 @@ export class Visual implements IVisual {
     }
 
     // generate stacked column chart with legend
-    private generateStackedColumnChart(visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
+    private generateStackedColumnChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
         // clearing previous format
         this.svg.selectAll("*").remove();
 
-        // set width and height
-        var width = options.viewport.width;
-        var height = options.viewport.height;
-
-        var margin = { top: 20, right: 20, bottom: 40, left: 50 };
-        var innerWidth = width - margin.left - margin.right;
-        var innerHeight = height - margin.top - margin.bottom;
+        var innerWidth = width - this.margin.left - this.margin.right;
+        var innerHeight = height - this.margin.top - this.margin.bottom;
 
         var svg = this.svg
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', "translate(" + margin.left + ", " + margin.top + ")");
+            .attr('transform', "translate(" + this.margin.left + ", " + this.margin.top + ")");
 
         // Converting data to necessary format for stacking and further formatting
         // [{category:value, subcategory1:value, subcategory2:value, ...}, ...] format
@@ -646,7 +633,7 @@ export class Visual implements IVisual {
             .padding(0.4)
             .paddingInner(0.5);
 
-        // draw x axis
+        // draw x axis and set tick numbers based on viewport width
         svg.append("g")
             .attr("class", "x-axis-stacked-column-chart")
             .attr('transform', "translate(0, " + innerHeight + ")")
@@ -695,7 +682,7 @@ export class Visual implements IVisual {
             .nice()
             .range([innerHeight, 0]);
 
-        // draw y axis
+        // draw y axis and set text labels based on viewport height
         if (innerHeight < 240) {
             svg.append("g")
                 .attr("class", "y-axis-stacked-column-chart")
@@ -734,7 +721,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'x-axis-label')
                 .attr('x', innerWidth / 2)
-                .attr('y', innerHeight + margin.bottom - 2)
+                .attr('y', innerHeight + this.margin.bottom - 2)
                 .style('text-anchor', 'middle')
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
@@ -745,7 +732,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'y-axis-label')
                 .attr('x', -innerHeight / 2)
-                .attr('y', -margin.left * 0.8)
+                .attr('y', -this.margin.left * 0.8)
                 .style('text-anchor', 'middle')
                 .attr('transform', 'rotate(-90)')
                 .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
@@ -777,23 +764,18 @@ export class Visual implements IVisual {
     }
 
     // Method for generating stacked bar chart with legend
-    private generateStackedBarChart(visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
+    private generateStackedBarChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
         // clearing previous format
         this.svg.selectAll("*").remove();
 
-        // set width and height
-        var width = options.viewport.width;
-        var height = options.viewport.height;
-
-        var margin = { top: 20, right: 20, bottom: 40, left: 50 };
-        var innerWidth = width - margin.left - margin.right;
-        var innerHeight = height - margin.top - margin.bottom;
+        var innerWidth = width - this.margin.left - this.margin.right;
+        var innerHeight = height - this.margin.top - this.margin.bottom;
 
         var svg = this.svg
             .attr('width', width)
             .attr('height', height)
             .append('g')
-            .attr('transform', "translate(" + margin.left + "," + margin.top + ")");
+            .attr('transform', "translate(" + this.margin.left + "," + this.margin.top + ")");
 
         // Converting data to suitable format for stacking and further formatting
         const formattedVisualData = visualChartData.map(item => {
@@ -832,7 +814,7 @@ export class Visual implements IVisual {
             .domain([minValue, d3.max(visualChartData, d => d.value.sum)])
             .range([0, innerWidth - 10]);
 
-        // draw x axis
+        // draw x axis and set tick numbers based on viewport width
         if (innerWidth < 400) {
             svg.append("g")
                 .attr("class", "x-axis-stacked bar-chart")
@@ -865,7 +847,7 @@ export class Visual implements IVisual {
             .padding(0.4)
             .paddingInner(0.5);
 
-        // draw y axis
+        // draw y axis and set text labels based on viewport height
         svg.append("g")
             .attr('transform', "translate(20,0)")
             .attr("class", "y-axis-bar-chart")
@@ -912,7 +894,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'x-axis-label')
                 .attr('x', innerWidth / 2)
-                .attr('y', innerHeight + margin.bottom - 5)
+                .attr('y', innerHeight + this.margin.bottom - 5)
                 .style('text-anchor', 'middle')
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
@@ -923,7 +905,7 @@ export class Visual implements IVisual {
             svg.append('text')
                 .attr('class', 'y-axis-label')
                 .attr('x', -innerHeight / 2)
-                .attr('y', -margin.left * 0.8)
+                .attr('y', -this.margin.left * 0.8)
                 .style('text-anchor', 'middle')
                 .attr('transform', 'rotate(-90)')
                 .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
@@ -1068,5 +1050,6 @@ export class Visual implements IVisual {
 
     public destroy(): void {
         // Perform any cleanup tasks here
+        this.svg.exit().remove();
     }
 }
