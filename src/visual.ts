@@ -209,21 +209,14 @@ export class Visual implements IVisual {
             })
             .text((d) => {
                 if ((innerWidth < 500)) {
-                    return shortenLabel(d, 7);
+                    return this.shortenLabel(d, 7);
                 }
-                else if (innerWidth > 500 && innerWidth < 700) { return shortenLabel(d, 14); }
+                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 14); }
                 else {
                     return d;
                 }
             });
 
-        // Method to restrict label size
-        function shortenLabel(label, maxLength) {
-            if (label.length > maxLength) {
-                return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
-            }
-            return label;
-        }
         // Formatting values
         let iValueFormatter = valueFormatter.create({ value: 1e6 });
 
@@ -446,21 +439,13 @@ export class Visual implements IVisual {
             })
             .text((d) => {
                 if ((innerHeight < 500)) {
-                    return shortenLabel(d, 7);
+                    return this.shortenLabel(d, 7);
                 }
-                else if (innerHeight > 500 && innerHeight < 700) { return shortenLabel(d, 14); }
+                else if (innerHeight > 500 && innerHeight < 700) { return this.shortenLabel(d, 14); }
                 else {
                     return d;
                 }
             });
-
-        // Method to restrict label size
-        function shortenLabel(label, maxLength) {
-            if (label.length > maxLength) {
-                return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
-            }
-            return label;
-        }
 
         // Fetching axis labels from metadata
         var columns = options.dataViews[0].metadata.columns;
@@ -654,21 +639,14 @@ export class Visual implements IVisual {
             })
             .text((d) => {
                 if ((innerWidth < 500)) {
-                    return shortenLabel(d, 7);
+                    return this.shortenLabel(d, 7);
                 }
-                else if (innerWidth > 500 && innerWidth < 700) { return shortenLabel(d, 16); }
+                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 16); }
                 else {
                     return d;
                 }
             });
 
-        // Method to restrict label size
-        function shortenLabel(label, maxLength) {
-            if (label.length > maxLength) {
-                return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
-            }
-            return label;
-        }
         // Formatting values
         let iValueFormatter = valueFormatter.create({ value: 1e6 });
 
@@ -862,21 +840,13 @@ export class Visual implements IVisual {
             })
             .text((d) => {
                 if ((innerHeight < 500)) {
-                    return shortenLabel(d, 7);
+                    return this.shortenLabel(d, 7);
                 }
-                else if (innerHeight > 500 && innerHeight < 700) { return shortenLabel(d, 14); }
+                else if (innerHeight > 500 && innerHeight < 700) { return this.shortenLabel(d, 14); }
                 else {
                     return d;
                 }
             });
-
-        // Method to restrict label size
-        function shortenLabel(label, maxLength) {
-            if (label.length > maxLength) {
-                return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
-            }
-            return label;
-        }
 
         // Fetching axis labels from metadata
         var columns = options.dataViews[0].metadata.columns;
@@ -929,7 +899,6 @@ export class Visual implements IVisual {
             .attr("height", yScaleBar.bandwidth())
             .attr("x", function (d) { return xScaleBar(d[0]); })
             .attr("width", function (d) { return xScaleBar(d[1]) - xScaleBar(d[0]); });
-
 
         // Add legend
         this.showLegend(svg, stackCategory, subCategories, colorStack);
@@ -1005,17 +974,17 @@ export class Visual implements IVisual {
             .style("text-anchor", "start")
             .style("font-size", "0.8em")
             .text((d) => {
-                return shortenLabel(d, 10)
-            });
+                return this.shortenLabel(d, 10)
+            });  
+    }
 
-        // Method to restrict label size
-        function shortenLabel(label, maxLength) {
+    // Method to restrict label size
+    private shortenLabel(label, maxLength) {
             if (label.length > maxLength) {
                 return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
             }
             return label;
         }
-    }
 
     // Method for tooltip
     private viewTooltip(visualChartData: ChartDataPoints[]) {
