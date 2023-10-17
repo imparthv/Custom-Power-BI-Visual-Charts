@@ -170,8 +170,6 @@
         ],
         "supportEnhancedTooltips": true
     },
-    "supportsKeyboardFocus": true,
     "supportsLandingPage": true,
-    "supportsEmptyDataView": true,
     "privileges": []
 }
