@@ -37,7 +37,7 @@ import { VisualFormattingSettingsModel } from "./settings";
 export interface ChartDataPoints {
     category: string,
     value: any,
-    identity?: ISelectionId
+    selectionID?: ISelectionId
 }
 
 export class Visual implements IVisual {
@@ -309,14 +309,13 @@ export class Visual implements IVisual {
                 .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
                 .style("fill", "steelblue")
                 .on("click", (d) => {
-                    this.selectionManager.select(d.identity, true).then(
-                        ids => {
-                            this.svg.style({
-                                "fill-opacity": ids.length > 0 ?
-                                    d => ids.indexOf(d.identity) >= 0 ? 1.0 : 0.5 : 1.0
-                            } as any);
-                        }
-                    );
+                    this.selectionManager.select(d.selectionID).then((selectionId: ISelectionId[]) => {
+                        svg.selectAll(".bar").style({
+                            "fill-opacity": selectionId.length > 0 ?
+                                d => selectionId.indexOf(d.identity) >= 0 ? 1.0 : 0.5 :
+                                1.0
+                        } as any);
+                    });
                 });
         }
         else {
@@ -552,17 +551,18 @@ export class Visual implements IVisual {
     // Method to format data for simple chart
     private parseSimpleChartData(dataViewSet: DataView): ChartDataPoints[] {
         let visualChartDataPoints: ChartDataPoints[] = [];
-        const categories = dataViewSet.categorical.categories[0].values;
+        const categories = dataViewSet.categorical.categories[0];
         const values = dataViewSet.categorical.values[0];
         // Return data in [{category:value}, {category:value}, ....] format
-        visualChartDataPoints = categories.map((category, i) => ({
-            category: category.toString(),
-            value: values.values[i] as number,
-            identity: this.host.createSelectionIdBuilder()
-                .withCategory(dataViewSet.categorical.categories[0], i)
-                .createSelectionId()
-        }));
-        console.log(visualChartDataPoints);
+        for (let i = 0; i < Math.max(categories.values.length, values.values.length); i++) {
+            visualChartDataPoints.push({
+                category: categories.values[i].toString(),
+                value: values.values[i],
+                selectionID: this.host.createSelectionIdBuilder()
+                    .withCategory(categories, i)
+                    .createSelectionId()
+            })
+        }
         return visualChartDataPoints;
     }
 
