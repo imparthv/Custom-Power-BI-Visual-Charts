@@ -22,6 +22,10 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 // Importing color utils
 import IColorPalette = powerbi.extensibility.IColorPalette;
 
+// 
+import ISelectionId = powerbi.extensibility.ISelectionId
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
+
 // Importing Tooltip utils
 import { createTooltipServiceWrapper, ITooltipServiceWrapper, TooltipEventArgs, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
@@ -32,7 +36,8 @@ import { VisualFormattingSettingsModel } from "./settings";
 // Interface for structuring data
 export interface ChartDataPoints {
     category: string,
-    value: any
+    value: any,
+    identity?: ISelectionId
 }
 
 export class Visual implements IVisual {
@@ -40,6 +45,7 @@ export class Visual implements IVisual {
     private formattingSettingsService: FormattingSettingsService;
     private host: IVisualHost;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
+    private selectionManager: ISelectionManager
 
     // Initialising values for landing page
     private element: HTMLElement;
@@ -55,6 +61,7 @@ export class Visual implements IVisual {
         this.formattingSettingsService = new FormattingSettingsService();
         this.host = options.host;
         this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
+        this.selectionManager = this.host.createSelectionManager();
 
         // Initialising container to store the visual in the target element
         this.element = options.element;
@@ -174,10 +181,10 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            colorStack= this.generateColorPallete(subCategories);
             visualChartData.forEach((element) => {
                 subCategories.push(element.category);
             })
+            colorStack = this.generateColorPallete(subCategories);
         }
 
         // scale x axis
@@ -290,38 +297,50 @@ export class Visual implements IVisual {
         }
 
         // Create svg to represent data
-        svg.selectAll(".bar")
-            .data(visualChartData)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("x", d => xScaleColumn(d.category))
-            .attr("width", xScaleColumn.bandwidth())
-            .attr("y", d => yScaleColumn(0))
-            .attr("height", d => innerHeight - yScaleColumn(0))
-            .style("fill", "steelblue");
-
-        // Animation
         if (!isLegend) {
-            svg.selectAll("rect")
+            svg.selectAll(".bar")
                 .data(visualChartData)
-                .transition()
-                .duration(1000)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xScaleColumn(d.category))
+                .attr("width", xScaleColumn.bandwidth())
                 .attr("y", d => yScaleColumn(Math.max(0, d.value)))
                 .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
-                .delay(function (d, i) { return (i * 100); })
-                .style("fill", "steelblue");
+                .style("fill", "steelblue")
+                .on("click", (d) => {
+                    this.selectionManager.select(d.identity, true).then(
+                        ids => {
+                            this.svg.style({
+                                "fill-opacity": ids.length > 0 ?
+                                    d => ids.indexOf(d.identity) >= 0 ? 1.0 : 0.5 : 1.0
+                            } as any);
+                        }
+                    );
+                });
         }
         else {
-            svg.selectAll("rect")
+            svg.selectAll(".bar")
                 .data(visualChartData)
-                .transition()
-                .duration(1000)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xScaleColumn(d.category))
+                .attr("width", xScaleColumn.bandwidth())
                 .attr("y", d => yScaleColumn(Math.max(0, d.value)))
                 .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
-                .delay(function (d, i) { return (i * 100); })
                 .style("fill", function (d, i) {
                     return colorStack[i];
+                })
+                .on("click", (d) => {
+                    this.selectionManager.select(d.identity, true).then(
+                        ids => {
+                            this.svg.style({
+                                "fill-opacity": ids.length > 0 ?
+                                    d => ids.indexOf(d.identity) >= 0 ? 1.0 : 0.5 : 1.0
+                            } as any);
+                        }
+                    );
                 });
 
             // Adding legend
@@ -364,10 +383,10 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            colorStack = this.generateColorPallete(subCategories);
             visualChartData.forEach((element) => {
                 subCategories.push(element.category);
             });
+            colorStack = this.generateColorPallete(subCategories);
         }
 
         // Formatting values
@@ -479,36 +498,31 @@ export class Visual implements IVisual {
         }
 
         // Create svg to represent data
-        svg.selectAll(".bar")
-            .data(visualChartData)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr('transform', "translate(20, 0)")
-            .attr("y", d => yScaleBar(d.category))
-            .attr("height", yScaleBar.bandwidth())
-            .attr("x", d => xScaleBar(0))
-            .style("fill", "steelblue");
-
-        // Animation
         if (!isLegend) {
-            svg.selectAll("rect")
+            svg.selectAll(".bar")
                 .data(visualChartData)
-                .transition()
-                .duration(2000)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr('transform', "translate(20, 0)")
+                .attr("y", d => yScaleBar(d.category))
+                .attr("height", yScaleBar.bandwidth())
                 .attr("x", d => xScaleBar(0))
                 .attr("width", d => Math.abs(xScaleBar(d.value) - xScaleBar(0)))
-                .delay(function (d, i) { return (i * 100); })
                 .style("fill", "steelblue");
         }
+
         else {
-            svg.selectAll("rect")
+            svg.selectAll(".bar")
                 .data(visualChartData)
-                .transition()
-                .duration(2000)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr('transform', "translate(20, 0)")
+                .attr("y", d => yScaleBar(d.category))
+                .attr("height", yScaleBar.bandwidth())
                 .attr("x", d => xScaleBar(0))
                 .attr("width", d => Math.abs(xScaleBar(d.value) - xScaleBar(0)))
-                .delay(function (d, i) { return (i * 100); })
                 .style("fill", function (d, i) {
                     return colorStack[i];
                 });
@@ -516,7 +530,6 @@ export class Visual implements IVisual {
             // Adding legend
             this.showLegend(svg, categoryName, subCategories, colorStack);
         }
-
 
         // Add text labels
         if (this.formattingSettings.dataPointCard.showDataLabels.value) {
@@ -544,9 +557,12 @@ export class Visual implements IVisual {
         // Return data in [{category:value}, {category:value}, ....] format
         visualChartDataPoints = categories.map((category, i) => ({
             category: category.toString(),
-            value: values.values[i] as number
+            value: values.values[i] as number,
+            identity: this.host.createSelectionIdBuilder()
+                .withCategory(dataViewSet.categorical.categories[0], i)
+                .createSelectionId()
         }));
-
+        console.log(visualChartDataPoints);
         return visualChartDataPoints;
     }
 
@@ -967,7 +983,7 @@ export class Visual implements IVisual {
     }
 
     // Method to generate color palettes 
-    private generateColorPallete(subCategories: string[]) : string[]{
+    private generateColorPallete(subCategories: string[]): string[] {
         let colorPalette: IColorPalette = this.host.colorPalette;
         let colorStack: string[] = []
         Object.keys(subCategories).forEach((value) => {
