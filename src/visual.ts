@@ -35,7 +35,6 @@ export interface ChartDataPoints {
     value: any
 }
 
-
 export class Visual implements IVisual {
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
@@ -368,11 +367,7 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            let colorPalette: IColorPalette = this.host.colorPalette;
-            Object.keys(visualChartData).forEach((value) => {
-                colorStack.push(colorPalette.getColor(value).value);
-            });
-
+            colorStack = this.generateColorPallete(subCategories);
             visualChartData.forEach((element) => {
                 subCategories.push(element.category);
             });
@@ -596,13 +591,7 @@ export class Visual implements IVisual {
 
         // Extracting subcategories
         const subCategories = Object.keys(formattedVisualData[0]).filter(key => key !== "category" && key !== "sum");
-
-        // Generating color palette for subcategories
-        let colorPalette: IColorPalette = this.host.colorPalette;
-        let colorStack: string[] = [];
-        Object.keys(subCategories).forEach((value) => {
-            colorStack.push(colorPalette.getColor(value).value);
-        });
+        let colorStack: string[] = this.generateColorPallete(subCategories);
 
         // Stack the data
         const stack = d3.stack().keys(subCategories)
@@ -764,13 +753,7 @@ export class Visual implements IVisual {
 
         // Extracting subcategories
         const subCategories = Object.keys(formattedVisualData[0]).filter(key => key !== "category" && key !== "sum");
-
-        // Generating color palette for subcategories
-        let colorPalette: IColorPalette = this.host.colorPalette;
-        let colorStack: string[] = []
-        Object.keys(subCategories).forEach((value) => {
-            colorStack.push(colorPalette.getColor(value).value);
-        });
+        let colorStack: string[] = this.generateColorPallete(subCategories);
 
         // Stack the data
         const stack = d3.stack().keys(subCategories)
@@ -975,16 +958,26 @@ export class Visual implements IVisual {
             .style("font-size", "0.8em")
             .text((d) => {
                 return this.shortenLabel(d, 10)
-            });  
+            });
     }
 
     // Method to restrict label size
     private shortenLabel(label, maxLength) {
-            if (label.length > maxLength) {
-                return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
-            }
-            return label;
+        if (label.length > maxLength) {
+            return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
         }
+        return label;
+    }
+
+    // Method to generate color palettes 
+    private generateColorPallete(subCategories: string[]) : string[]{
+        let colorPalette: IColorPalette = this.host.colorPalette;
+        let colorStack: string[] = []
+        Object.keys(subCategories).forEach((value) => {
+            colorStack.push(colorPalette.getColor(value).value);
+        });
+        return colorStack
+    }
 
     // Method for tooltip
     private viewTooltip(visualChartData: ChartDataPoints[]) {
