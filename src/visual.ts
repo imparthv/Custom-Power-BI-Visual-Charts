@@ -69,6 +69,7 @@ export class Visual implements IVisual {
         this.formattingSettings.dataPointCard.fontSize.value = Math.max(10, this.formattingSettings.dataPointCard.fontSize.value);
         this.formattingSettings.dataPointCard.fontSize.value = Math.min(14, this.formattingSettings.dataPointCard.fontSize.value)
 
+        this.svg.selectAll("*").remove();
         // Handling landing page
         this.handleLandingPage(options);
 
@@ -173,11 +174,7 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            let colorPalette: IColorPalette = this.host.colorPalette;
-            Object.keys(visualChartData).forEach((value) => {
-                colorStack.push(colorPalette.getColor(value).value);
-            });
-
+            colorStack= this.generateColorPallete(subCategories);
             visualChartData.forEach((element) => {
                 subCategories.push(element.category);
             })
