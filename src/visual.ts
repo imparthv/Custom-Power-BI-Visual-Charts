@@ -34,10 +34,13 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { VisualFormattingSettingsModel } from "./settings";
 
 // Interface for structuring data
-import {ChartDataPoints} from "./interface"
+import { ChartDataPoints } from "./interface"
+
+// importing data parsing module
+import { parseSimpleChartData, parseLegendSimpleChartData, parseStackedChartData } from "./dataParser"
 
 // Importing legend creation 
-import {showLegend} from "./legend"
+import { showLegend } from "./legend"
 
 
 export class Visual implements IVisual {
@@ -87,7 +90,8 @@ export class Visual implements IVisual {
         // filtering suitable parsing methods and visual methods based on metadata structure
         if (!options.dataViews[0].categorical.values.source) {
             // fetch suitable formatted data for the generating visual
-            var chartData = this.parseSimpleChartData(options.dataViews[0]);
+            var chartData = parseSimpleChartData(options.dataViews[0], this.host);
+            console.log(chartData);
             // column chart
             if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
                 this.generateColumnChart(width, height, chartData, options);
@@ -101,7 +105,7 @@ export class Visual implements IVisual {
         else {
             // fetch suitable formatted data for the generating visual
             if (options.dataViews[0].categorical.categories) {
-                var legendChartData = this.parseStackedChartData(options.dataViews[0]);
+                var legendChartData = parseStackedChartData(options.dataViews[0]);
                 var subCategoryTitle = options.dataViews[0].metadata.columns[2].displayName
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
                     this.generateStackedColumnChart(width, height, legendChartData, options, subCategoryTitle);
@@ -111,7 +115,7 @@ export class Visual implements IVisual {
                 }
             }
             else {
-                var chartData = this.parseLegendSimpleChartData(options.dataViews[0]);
+                var chartData = parseLegendSimpleChartData(options.dataViews[0]);
                 var categoryTitle = options.dataViews[0].categorical.values.source.displayName;
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
                     this.generateColumnChart(width, height, chartData, options, categoryTitle, true);
@@ -548,38 +552,6 @@ export class Visual implements IVisual {
         this.viewTooltip(visualChartData);
     }
 
-    // Method to format data for simple chart
-    private parseSimpleChartData(dataViewSet: DataView): ChartDataPoints[] {
-        let visualChartDataPoints: ChartDataPoints[] = [];
-        const categories = dataViewSet.categorical.categories[0];
-        const values = dataViewSet.categorical.values[0];
-        // Return data in [{category:value}, {category:value}, ....] format
-        for (let i = 0; i < Math.max(categories.values.length, values.values.length); i++) {
-            visualChartDataPoints.push({
-                category: categories.values[i].toString(),
-                value: values.values[i],
-                selectionID: this.host.createSelectionIdBuilder()
-                    .withCategory(categories, i)
-                    .createSelectionId()
-            })
-        }
-        return visualChartDataPoints;
-    }
-
-    // Method to format data for a simple chart with a legnd feature
-    private parseLegendSimpleChartData(dataViewSet: DataView): ChartDataPoints[] {
-        let visualChartDataPoints: ChartDataPoints[] = [];
-        // generates [{"category":"", value:}, {"category":"", value:}, ...]
-        dataViewSet.categorical.values.forEach((value) => {
-            visualChartDataPoints.push({
-                category: value.source.groupName.toString(),
-                value: value.values[0] as number
-            });
-        })
-
-        return visualChartDataPoints;
-    }
-
     // generate stacked column chart with legend
     private generateStackedColumnChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
         // clearing previous format
@@ -901,41 +873,6 @@ export class Visual implements IVisual {
 
         // Add tooltip
         // this.viewTooltip(visualChartData);
-    }
-
-    // Method to fornat data for stacked chart
-    private parseStackedChartData(dataViewSet: DataView): ChartDataPoints[] {
-        let visualChartDataPoints: ChartDataPoints[] = [];
-        const categories = dataViewSet.categorical.categories[0].values;
-        let categoryLegendDataPoints: ChartDataPoints[] = [];
-
-        // convert data into [{"subcategory1":values[]}, {"subCategory2": values[]}, ...] format
-        dataViewSet.categorical.values.grouped().forEach((value) => {
-            categoryLegendDataPoints.push({
-                category: value.name.toString(),
-                value: value.values[0].values.map(value => value)
-            })
-        });
-
-        // convert data into [{subCategory1: value}, {subcategory2: value}, ....] format
-        let stackedSubCategoryDataPoints = categoryLegendDataPoints[0].value.map((_, index) => {
-            const stack = {};
-            let sum = 0;
-            categoryLegendDataPoints.forEach(item => {
-                stack[item.category] = item.value[index];
-                sum += item.value[index]; // Calculate the sum
-            });
-            stack["sum"] = sum;
-            return stack;
-        });
-
-        // convert data into [{category: values[{subcategory1: value}, {subcategory2:value}, ...]}, ...] format
-        visualChartDataPoints = categories.map((category, i) => ({
-            category: category.toString(),
-            value: stackedSubCategoryDataPoints[i]
-        }));
-
-        return visualChartDataPoints;
     }
 
     // Method to restrict label size
