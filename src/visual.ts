@@ -34,11 +34,8 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { VisualFormattingSettingsModel } from "./settings";
 
 // Interface for structuring data
-export interface ChartDataPoints {
-    category: string,
-    value: any,
-    selectionID?: ISelectionId
-}
+import {ChartDataPoints} from "./interface"
+
 
 export class Visual implements IVisual {
     private formattingSettings: VisualFormattingSettingsModel;
