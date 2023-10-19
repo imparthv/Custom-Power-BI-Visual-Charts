@@ -22,7 +22,7 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 // Importing color utils
 import IColorPalette = powerbi.extensibility.IColorPalette;
 
-// 
+// Selection utils
 import ISelectionId = powerbi.extensibility.ISelectionId
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
@@ -35,6 +35,9 @@ import { VisualFormattingSettingsModel } from "./settings";
 
 // Interface for structuring data
 import {ChartDataPoints} from "./interface"
+
+// Importing legend creation 
+import {showLegend} from "./legend"
 
 
 export class Visual implements IVisual {
@@ -340,7 +343,7 @@ export class Visual implements IVisual {
                 });
 
             // Adding legend
-            this.showLegend(svg, categoryName, subCategories, colorStack);
+            showLegend(svg, categoryName, subCategories, colorStack);
         }
 
 
@@ -524,7 +527,7 @@ export class Visual implements IVisual {
                 });
 
             // Adding legend
-            this.showLegend(svg, categoryName, subCategories, colorStack);
+            showLegend(svg, categoryName, subCategories, colorStack);
         }
 
         // Add text labels
@@ -734,7 +737,7 @@ export class Visual implements IVisual {
             .attr("width", xScaleColumn.bandwidth());
 
         // Add legend
-        this.showLegend(svg, stackCategory, subCategories, colorStack);
+        showLegend(svg, stackCategory, subCategories, colorStack);
 
         // Add tooltip
         // this.viewTooltip(visualChartData);
@@ -894,7 +897,7 @@ export class Visual implements IVisual {
             .attr("width", function (d) { return xScaleBar(d[1]) - xScaleBar(d[0]); });
 
         // Add legend
-        this.showLegend(svg, stackCategory, subCategories, colorStack);
+        showLegend(svg, stackCategory, subCategories, colorStack);
 
         // Add tooltip
         // this.viewTooltip(visualChartData);
@@ -933,42 +936,6 @@ export class Visual implements IVisual {
         }));
 
         return visualChartDataPoints;
-    }
-
-
-    // Method for legend
-    private showLegend(chartSVG: d3.Selection<SVGElement, any, any, any>, stackCategory: string, innerCategories: string[], categoricalColors: string[]) {
-
-        // Adding legend title
-        chartSVG.append("text")
-            .attr("x", -50)
-            .attr("y", -10)
-            .style("font-weight", "bold")
-            .style("font-size", "0.8em")
-            .text(stackCategory);
-
-        var legend = chartSVG.selectAll(".legend")
-            .data(innerCategories)
-            .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", function (d, i) { return "translate(" + i * 100 + ", -20)" });
-
-        legend.append("circle")
-            .attr("x", 20)
-            .attr("cx", 10)
-            .attr("cy", 8)
-            .attr("r", 7)
-            .style("fill", (d, i) => { return categoricalColors[i]; });
-
-        legend.append("text")
-            .attr("x", 20)
-            .attr("y", 9)
-            .attr("dy", ".35em")
-            .style("text-anchor", "start")
-            .style("font-size", "0.8em")
-            .text((d) => {
-                return this.shortenLabel(d, 10)
-            });
     }
 
     // Method to restrict label size
