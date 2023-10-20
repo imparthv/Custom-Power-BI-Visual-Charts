@@ -2,16 +2,6 @@
 
 import * as d3 from "d3";
 import powerbi from "powerbi-visuals-api";
-import DataView = powerbi.DataView;
-
-// Importing utils to work with the properties pane for visual
-import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
-
-// Importing Formatting Utils
-import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
-
-// Importing custom styles
-import "./../style/visual.less";
 
 // Essential imports dealing with visual development on the BI interface
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
@@ -19,28 +9,24 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
-// Importing color utils
 import IColorPalette = powerbi.extensibility.IColorPalette;
-
-// Selection utils
 import ISelectionId = powerbi.extensibility.ISelectionId
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
-// Importing Tooltip utils
+import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
+import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
+import { axis } from "powerbi-visuals-utils-chartutils";
+
 import { createTooltipServiceWrapper, ITooltipServiceWrapper, TooltipEventArgs, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 
-// Importing formatting data cards from the setting.ts for format pane
+import "./../style/visual.less";
+
 import { VisualFormattingSettingsModel } from "./settings";
-
-// Interface for structuring data
-import { ChartDataPoints } from "./interface"
-
-// importing data parsing module
-import { parseSimpleChartData, parseLegendSimpleChartData, parseStackedChartData } from "./dataParser"
-
-// Importing legend creation 
-import { showLegend } from "./legend"
+import { ChartDataPoints } from "./interface";
+import { parseSimpleChartData, parseLegendSimpleChartData, parseStackedChartData } from "./dataParser";
+import { getFormattedValue } from "./valueFomatter";
+import { showLegend } from "./legend";
 
 
 export class Visual implements IVisual {
@@ -91,7 +77,6 @@ export class Visual implements IVisual {
         if (!options.dataViews[0].categorical.values.source) {
             // fetch suitable formatted data for the generating visual
             var chartData = parseSimpleChartData(options.dataViews[0], this.host);
-            console.log(chartData);
             // column chart
             if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
                 this.generateColumnChart(width, height, chartData, options);
@@ -224,9 +209,6 @@ export class Visual implements IVisual {
                 }
             });
 
-        // Formatting values
-        let iValueFormatter = valueFormatter.create({ value: 1e6 });
-
         // Finding appropriate min value to plot negative values
         var minValue = 0;
         minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
@@ -237,6 +219,7 @@ export class Visual implements IVisual {
             .nice()
             .range([innerHeight, 0]);
 
+
         // draw y axis
         if (innerHeight < 240) {
             svg.append("g")
@@ -245,7 +228,7 @@ export class Visual implements IVisual {
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
                     .ticks(4)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -255,7 +238,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -361,7 +344,7 @@ export class Visual implements IVisual {
                 .attr("x", d => xScaleColumn(d.category) + xScaleColumn.bandwidth() / 8)
                 .attr("y", d => yScaleColumn(d.value) - 20)
                 .attr("dy", ".75em")
-                .text(d => iValueFormatter.format(d.value));
+                .text(d => getFormattedValue(d.value));
         }
 
         // Add tooltip
@@ -913,10 +896,9 @@ export class Visual implements IVisual {
 
     // Method to retrieve tooltip data
     private getTooltipData(value: any): VisualTooltipDataItem[] {
-        let iValueFormatter = valueFormatter.create({ value: 1e6 });
         return [{
             displayName: value.category,
-            value: iValueFormatter.format(value.value).toString()
+            value: getFormattedValue(value.value)
         }];
     }
 
