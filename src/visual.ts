@@ -15,7 +15,6 @@ import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
 import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
-import { axis } from "powerbi-visuals-utils-chartutils";
 
 import { createTooltipServiceWrapper, ITooltipServiceWrapper, TooltipEventArgs, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
@@ -319,11 +318,11 @@ export class Visual implements IVisual {
                     return colorStack[i];
                 })
                 .on("click", (d) => {
-                    this.selectionManager.select(d.identity, true).then(
+                    this.selectionManager.select(d.selectionID, true).then(
                         ids => {
-                            this.svg.style({
+                            this.svg.selectAll("rect").style({
                                 "fill-opacity": ids.length > 0 ?
-                                    d => ids.indexOf(d.identity) >= 0 ? 1.0 : 0.5 : 1.0
+                                    d => ids.indexOf(d.selectionID) >= 0 ? 1.0 : 0.5 : 1.0
                             } as any);
                         }
                     );
@@ -881,7 +880,7 @@ export class Visual implements IVisual {
         this.svg.selectAll("rect").on("mouseover", function (event, data) {
             d3.select(this).transition()
                 .duration(1000)
-                .attr("opacity", "0.6")
+                .attr("opacity", "0.6");
         });
         this.svg.selectAll("rect").on("mouseout", function (event, data) {
             d3.select(this).transition()
