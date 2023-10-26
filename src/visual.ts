@@ -194,15 +194,18 @@ export class Visual implements IVisual {
                 if (innerWidth < 500) {
                     return "translate(-20, 3)rotate(-20)";
                 }
-                else if (innerWidth > 500 && innerWidth < 700) {
+                else if (innerWidth > 500 && innerWidth < 800) {
                     return "translate(0, 3)";
+                }
+                else {
+                    return "translate(0, 3)rotate(0)";
                 }
             })
             .text((d) => {
                 if ((innerWidth < 500)) {
                     return this.shortenLabel(d, 7);
                 }
-                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 14); }
+                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 16); }
                 else {
                     return d;
                 }
@@ -347,7 +350,7 @@ export class Visual implements IVisual {
         }
 
         // Add tooltip
-        this.viewTooltip(visualChartData);
+        this.viewTooltip();
     }
 
     private generateBarChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
@@ -374,9 +377,6 @@ export class Visual implements IVisual {
             colorStack = this.generateColorPallete(subCategories);
         }
 
-        // Formatting values
-        let iValueFormatter = valueFormatter.create({ value: 1e6 });
-
         // Finding appropriate min value to plot negative values
         var minValue = 0;
         minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
@@ -393,7 +393,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(3)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -406,7 +406,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(4)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -492,8 +492,8 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, 0)")
                 .attr("y", d => yScaleBar(d.category))
                 .attr("height", yScaleBar.bandwidth())
-                .attr("x", d => xScaleBar(0))
-                .attr("width", d => Math.abs(xScaleBar(d.value) - xScaleBar(0)))
+                .attr("x", d => (d.value >= 0) ? xScaleBar(0) : xScaleBar(d.value))
+                .attr("width", d => Math.abs(xScaleBar(0) - xScaleBar(d.value)))
                 .style("fill", "steelblue");
         }
 
@@ -506,7 +506,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, 0)")
                 .attr("y", d => yScaleBar(d.category))
                 .attr("height", yScaleBar.bandwidth())
-                .attr("x", d => xScaleBar(0))
+                .attr("x", d => (d.value >= 0) ? xScaleBar(0) : xScaleBar(d.value))
                 .attr("width", d => Math.abs(xScaleBar(d.value) - xScaleBar(0)))
                 .style("fill", function (d, i) {
                     return colorStack[i];
@@ -527,11 +527,11 @@ export class Visual implements IVisual {
                 .attr("x", d => xScaleBar(d.value) - 20)
                 .attr("dx", "3em")
                 .attr("dy", "1.5em")
-                .text(d => iValueFormatter.format(d.value));
+                .text(d => getFormattedValue(d.value));
         }
 
         // Add tooltip to the chart
-        // this.viewTooltip(visualChartData);
+        this.viewTooltip();
     }
 
     // generate stacked column chart with legend
@@ -603,9 +603,6 @@ export class Visual implements IVisual {
                 }
             });
 
-        // Formatting values
-        let iValueFormatter = valueFormatter.create({ value: 1e6 });
-
         // Finding appropriate min value to plot negative values
         var minValue = 0;
         minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
@@ -624,7 +621,7 @@ export class Visual implements IVisual {
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
                     .ticks(4)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -634,7 +631,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -685,7 +682,7 @@ export class Visual implements IVisual {
             .selectAll("rect")
             .data(d => d)
             .enter().append("rect")
-            .attr("x", function (d) { return xScaleColumn(d.data.category.toString()) })
+            .attr("x", function (d) { return xScaleColumn(d.data.category.toString()); })
             .attr("y", function (d) { return yScaleColumn(d[1]); })
             .attr("height", function (d) { return yScaleColumn(d[0]) - yScaleColumn(d[1]); })
             .attr("width", xScaleColumn.bandwidth());
@@ -729,10 +726,6 @@ export class Visual implements IVisual {
 
         var stackedData = stack(formattedVisualData);
 
-
-        // Formatting values
-        let iValueFormatter = valueFormatter.create({ value: 1e6 });
-
         // Finding appropriate min value to plot negative values
         var minValue = 0;
         minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
@@ -749,7 +742,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(4)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -760,7 +753,7 @@ export class Visual implements IVisual {
                 .attr("class", "x-axis-stacked bar-chart")
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
-                    .tickFormat(function (d) { return iValueFormatter.format(d) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -876,7 +869,7 @@ export class Visual implements IVisual {
     }
 
     // Method for tooltip
-    private viewTooltip(visualChartData: ChartDataPoints[]) {
+    private viewTooltip() {
         this.svg.selectAll("rect").on("mouseover", function (event, data) {
             d3.select(this).transition()
                 .duration(1000)
