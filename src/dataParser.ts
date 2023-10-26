@@ -10,7 +10,7 @@ export function parseSimpleChartData(dataViewSet: DataView, host: IVisualHost): 
         const categories = dataViewSet.categorical.categories[0];
         const values = dataViewSet.categorical.values[0];
         if (categories && values) {
-            // Return data in [{category:value}, {category:value}, ....] format
+            // Return data in [{category:"Category1", value: Numeric Value, selectionID:co-ordinate}, {category:"Category1", value: Numeric Value, selectionID:co-ordinate}, ....] format
             for (let i = 0; i < Math.max(categories.values.length, values.values.length); i++) {
                 visualChartDataPoints.push({
                     category: categories.values[i].toString(),
