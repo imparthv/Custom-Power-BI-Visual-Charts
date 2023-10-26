@@ -531,7 +531,7 @@ export class Visual implements IVisual {
         }
 
         // Add tooltip to the chart
-        this.viewTooltip(visualChartData);
+        // this.viewTooltip(visualChartData);
     }
 
     // generate stacked column chart with legend
