@@ -190,6 +190,7 @@ export class Visual implements IVisual {
             .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
             .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
             .selectAll("text")
+            .style("text-anchor", "middle")
             .attr("transform", function (d) {
                 if (innerWidth < 500) {
                     return "translate(-20, 3)rotate(-20)";
@@ -582,6 +583,7 @@ export class Visual implements IVisual {
             .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
             .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
             .selectAll("text")
+            .style("text-anchor", "middle")
             .attr("transform", function (d) {
                 if (innerWidth < 500) {
                     return "translate(-20, 3)rotate(-20)";
