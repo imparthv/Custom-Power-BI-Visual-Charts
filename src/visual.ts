@@ -14,10 +14,10 @@ import ISelectionId = powerbi.extensibility.ISelectionId
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
-import { valueFormatter, textMeasurementService } from "powerbi-visuals-utils-formattingutils";
 
 import { createTooltipServiceWrapper, ITooltipServiceWrapper, TooltipEventArgs, TooltipEnabledDataPoint } from "powerbi-visuals-utils-tooltiputils";
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
+import { textMeasurementService } from "powerbi-visuals-utils-formattingutils";
 
 import "./../style/visual.less";
 
@@ -26,6 +26,7 @@ import { ChartDataPoints } from "./interface";
 import { parseSimpleChartData, parseLegendSimpleChartData, parseStackedChartData } from "./dataParser";
 import { getFormattedValue } from "./valueFomatter";
 import { showLegend } from "./legend";
+import { wordBreak } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
 
 
 export class Visual implements IVisual {
@@ -191,26 +192,7 @@ export class Visual implements IVisual {
             .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
             .selectAll("text")
             .style("text-anchor", "middle")
-            .attr("transform", function (d) {
-                if (innerWidth < 500) {
-                    return "translate(-20, 3)rotate(-20)";
-                }
-                else if (innerWidth > 500 && innerWidth < 800) {
-                    return "translate(0, 3)";
-                }
-                else {
-                    return "translate(0, 3)rotate(0)";
-                }
-            })
-            .text((d) => {
-                if ((innerWidth < 500)) {
-                    return this.shortenLabel(d, 7);
-                }
-                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 16); }
-                else {
-                    return d;
-                }
-            });
+            .call(this.wordBreak, xScaleColumn.bandwidth(), innerHeight);
 
         // Finding appropriate min value to plot negative values
         var minValue = 0;
@@ -584,26 +566,7 @@ export class Visual implements IVisual {
             .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
             .selectAll("text")
             .style("text-anchor", "middle")
-            .attr("transform", function (d) {
-                if (innerWidth < 500) {
-                    return "translate(-20, 3)rotate(-20)";
-                }
-                else if (innerWidth > 500 && innerWidth < 800) {
-                    return "translate(0, 3)";
-                }
-                else {
-                    return "translate(0, 3)rotate(0)";
-                }
-            })
-            .text((d) => {
-                if ((innerWidth < 500)) {
-                    return this.shortenLabel(d, 7);
-                }
-                else if (innerWidth > 500 && innerWidth < 700) { return this.shortenLabel(d, 16); }
-                else {
-                    return d;
-                }
-            });
+            .call(this.wordBreak, xScaleColumn.bandwidth(), innerHeight);;
 
         // Finding appropriate min value to plot negative values
         var minValue = 0;
@@ -858,6 +821,20 @@ export class Visual implements IVisual {
             return label.substring(0, maxLength) + "..."; // Shorten the label and add ellipsis
         }
         return label;
+    }
+
+    // Method to wrap labels
+    private wordBreak(
+        textNodes: d3.Selection<any, SVGElement, any, any>,
+        allowedWidth: number,
+        maxHeight: number
+    ) {
+        textNodes.each(function () {
+            textMeasurementService.wordBreak(
+                this,
+                allowedWidth,
+                maxHeight);
+        });
     }
 
     // Method to generate color palettes 
