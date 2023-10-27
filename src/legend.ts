@@ -9,11 +9,16 @@ export function showLegend(chartSVG: d3.Selection<SVGElement, any, any, any>, st
         .style("font-size", "0.8em")
         .text(stackCategory);
 
+    var legendTitleWidth = stackCategory.length * 5;
+
     var legend = chartSVG.selectAll(".legend")
         .data(innerCategories)
         .enter().append("g")
         .attr("class", "legend")
-        .attr("transform", function (d, i) { return "translate(" + i * 100 + ", -20)" });
+        .attr("transform", function (d, i) { 
+            var xOffset = i * 100;
+            xOffset += legendTitleWidth;
+            return "translate(" + xOffset + ", -20)" });
 
     legend.append("circle")
         .attr("x", 20)
