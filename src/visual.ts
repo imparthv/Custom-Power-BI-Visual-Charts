@@ -10,7 +10,7 @@ import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
 import IColorPalette = powerbi.extensibility.IColorPalette;
-import ISelectionId = powerbi.extensibility.ISelectionId
+import ISelectionId = powerbi.extensibility.ISelectionId;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
@@ -34,7 +34,7 @@ export class Visual implements IVisual {
     private formattingSettingsService: FormattingSettingsService;
     private host: IVisualHost;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
-    private selectionManager: ISelectionManager
+    private selectionManager: ISelectionManager;
 
     // Initialising values for landing page
     private element: HTMLElement;
@@ -63,7 +63,7 @@ export class Visual implements IVisual {
         this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel
             (VisualFormattingSettingsModel, options.dataViews);
         this.formattingSettings.dataPointCard.fontSize.value = Math.max(10, this.formattingSettings.dataPointCard.fontSize.value);
-        this.formattingSettings.dataPointCard.fontSize.value = Math.min(14, this.formattingSettings.dataPointCard.fontSize.value)
+        this.formattingSettings.dataPointCard.fontSize.value = Math.min(14, this.formattingSettings.dataPointCard.fontSize.value);
 
         this.svg.selectAll("*").remove();
         // Handling landing page
@@ -91,7 +91,7 @@ export class Visual implements IVisual {
             // fetch suitable formatted data for the generating visual
             if (options.dataViews[0].categorical.categories) {
                 var legendChartData = parseStackedChartData(options.dataViews[0]);
-                var subCategoryTitle = options.dataViews[0].metadata.columns[2].displayName
+                var subCategoryTitle = options.dataViews[0].metadata.columns[2].displayName;
                 if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
                     this.generateStackedColumnChart(width, height, legendChartData, options, subCategoryTitle);
                 }
@@ -210,7 +210,7 @@ export class Visual implements IVisual {
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
                     .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -220,7 +220,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -370,7 +370,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(3)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -383,7 +383,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -579,7 +579,7 @@ export class Visual implements IVisual {
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
                     .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -589,7 +589,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
                 .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0));
         }
@@ -699,7 +699,7 @@ export class Visual implements IVisual {
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
                     .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -710,7 +710,7 @@ export class Visual implements IVisual {
                 .attr("class", "x-axis-stacked bar-chart")
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()) })
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf());})
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -795,7 +795,7 @@ export class Visual implements IVisual {
             .data(d => d)
             .enter().append("rect")
             .attr('transform', "translate(20, 0)")
-            .attr("y", function (d) { return yScaleBar(d.data.category.toString()) })
+            .attr("y", function (d) { return yScaleBar(d.data.category.toString()); })
             .attr("height", yScaleBar.bandwidth())
             .attr("x", function (d) { return xScaleBar(d[0]); })
             .attr("width", function (d) { return xScaleBar(d[1]) - xScaleBar(d[0]); });
@@ -841,11 +841,11 @@ export class Visual implements IVisual {
     // Method to generate color palettes 
     private generateColorPallete(subCategories: string[]): string[] {
         let colorPalette: IColorPalette = this.host.colorPalette;
-        let colorStack: string[] = []
+        let colorStack: string[] = [];
         Object.keys(subCategories).forEach((value) => {
             colorStack.push(colorPalette.getColor(value).value);
         });
-        return colorStack
+        return colorStack;
     }
 
     private getMinValue(data: ChartDataPoints[]): number{

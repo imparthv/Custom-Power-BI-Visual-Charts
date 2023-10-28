@@ -34,7 +34,7 @@ export function showLegend(chartSVG: d3.Selection<SVGElement, any, any, any>, st
         .style("text-anchor", "start")
         .style("font-size", "0.8em")
         .text((d) => {
-            return shortenLabel(d, 10)
+            return shortenLabel(d, 10);
         });
 }
 

@@ -1,7 +1,7 @@
 import powerbi from "powerbi-visuals-api";
 import DataView = powerbi.DataView;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import { ChartDataPoints } from "./interface"
+import { ChartDataPoints } from "./interface";
 
 // Method to format data for simple chart
 export function parseSimpleChartData(dataViewSet: DataView, host: IVisualHost): ChartDataPoints[] {
