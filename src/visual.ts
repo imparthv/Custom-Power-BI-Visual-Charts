@@ -170,9 +170,7 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            visualChartData.forEach((element) => {
-                subCategories.push(element.category);
-            })
+            subCategories = this.getSubCategories(visualChartData);
             colorStack = this.generateColorPallete(subCategories);
         }
 
@@ -195,8 +193,7 @@ export class Visual implements IVisual {
             .call(this.wordBreak, xScaleColumn.bandwidth(), innerHeight);
 
         // Finding appropriate min value to plot negative values
-        var minValue = 0;
-        minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
+        var minValue: number = this.getMinValue(visualChartData);
 
         // scale y axis
         var yScaleColumn = d3.scaleLinear()
@@ -354,15 +351,12 @@ export class Visual implements IVisual {
         let colorStack: string[] = [];
         let subCategories: string[] = [];
         if (isLegend) {
-            visualChartData.forEach((element) => {
-                subCategories.push(element.category);
-            });
+            subCategories = this.getSubCategories(visualChartData);
             colorStack = this.generateColorPallete(subCategories);
         }
 
         // Finding appropriate min value to plot negative values
-        var minValue = 0;
-        minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
+        var minValue: number = this.getMinValue(visualChartData);
 
         // scale x axis
         var xScaleBar = d3.scaleLinear()
@@ -569,8 +563,7 @@ export class Visual implements IVisual {
             .call(this.wordBreak, xScaleColumn.bandwidth(), innerHeight);;
 
         // Finding appropriate min value to plot negative values
-        var minValue = 0;
-        minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
+        var minValue: number = this.getMinValue(visualChartData);
 
         // scale y axis
         var yScaleColumn = d3.scaleLinear()
@@ -692,8 +685,7 @@ export class Visual implements IVisual {
         var stackedData = stack(formattedVisualData);
 
         // Finding appropriate min value to plot negative values
-        var minValue = 0;
-        minValue = minValue > d3.min(visualChartData, d => d.value) ? d3.min(visualChartData, d => d.value) : 0;
+        var minValue: number = this.getMinValue(visualChartData);
 
         // scale x axis
         var xScaleBar = d3.scaleLinear()
@@ -837,6 +829,15 @@ export class Visual implements IVisual {
         });
     }
 
+    // Method to fetch subcategories
+    private getSubCategories(data: ChartDataPoints[]): string[]{
+        let innerCatagories: string[] = [];
+        data.forEach((element) => {
+                innerCatagories.push(element.category);
+            })
+        return innerCatagories;
+    }
+
     // Method to generate color palettes 
     private generateColorPallete(subCategories: string[]): string[] {
         let colorPalette: IColorPalette = this.host.colorPalette;
@@ -845,6 +846,12 @@ export class Visual implements IVisual {
             colorStack.push(colorPalette.getColor(value).value);
         });
         return colorStack
+    }
+
+    private getMinValue(data: ChartDataPoints[]): number{
+        var minValue: number = 0;
+        minValue = minValue > d3.min(data, d => d.value) ? d3.min(data, d => d.value) : 0;
+        return minValue;
     }
 
     // Method for tooltip
