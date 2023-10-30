@@ -25,9 +25,9 @@ export class DataPointCardSettings extends FormattingSettingsCard {
         value: { value: "black" }
     });
 
-    public defaultStackedBarChart = new formattingSettings.ToggleSwitch({
-        name: "convertToStackedBarChart",
-        displayName: "Switch Chart",
+    public flipChart = new formattingSettings.ToggleSwitch({
+        name: "flipChart",
+        displayName: "Flip Chart",
         value: false
     });
 
@@ -45,7 +45,7 @@ export class DataPointCardSettings extends FormattingSettingsCard {
 
     public name: string = "dataCard";
     public displayName: string = "Data Card";
-    public slices: FormattingSettingsSlice[] = [this.fontSize, this.fontFamily, this.fontColor, this.defaultStackedBarChart, this.showDataLabels, this.showAxisLabels];
+    public slices: FormattingSettingsSlice[] = [this.fontSize, this.fontFamily, this.fontColor, this.flipChart, this.showDataLabels, this.showAxisLabels];
 }
 
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {

@@ -142,7 +142,7 @@
                         }
                     }
                 },
-                "convertToStackedBarChart": {
+                "flipChart": {
                     "type": {
                         "bool": true
                     }

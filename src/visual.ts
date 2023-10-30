@@ -26,8 +26,6 @@ import { ChartDataPoints } from "./interface";
 import { parseSimpleChartData, parseLegendSimpleChartData, parseStackedChartData } from "./dataParser";
 import { getFormattedValue } from "./valueFomatter";
 import { showLegend } from "./legend";
-import { wordBreak } from "powerbi-visuals-utils-formattingutils/lib/src/textMeasurementService";
-
 
 export class Visual implements IVisual {
     private formattingSettings: VisualFormattingSettingsModel;
@@ -78,7 +76,7 @@ export class Visual implements IVisual {
             // fetch suitable formatted data for the generating visual
             var chartData = parseSimpleChartData(options.dataViews[0], this.host);
             // column chart
-            if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
+            if (!this.formattingSettings.dataPointCard.flipChart.value) {
                 this.generateColumnChart(width, height, chartData, options);
             }
             // bar chart
@@ -90,19 +88,19 @@ export class Visual implements IVisual {
         else {
             // fetch suitable formatted data for the generating visual
             if (options.dataViews[0].categorical.categories) {
-                var legendChartData = parseStackedChartData(options.dataViews[0]);
+                var chartData = parseStackedChartData(options.dataViews[0]);
                 var subCategoryTitle = options.dataViews[0].metadata.columns[2].displayName;
-                if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
-                    this.generateStackedColumnChart(width, height, legendChartData, options, subCategoryTitle);
+                if (!this.formattingSettings.dataPointCard.flipChart.value) {
+                    this.generateStackedColumnChart(width, height, chartData, options, subCategoryTitle);
                 }
                 else {
-                    this.generateStackedBarChart(width, height, legendChartData, options, subCategoryTitle);
+                    this.generateStackedBarChart(width, height, chartData, options, subCategoryTitle);
                 }
             }
             else {
                 var chartData = parseLegendSimpleChartData(options.dataViews[0]);
                 var categoryTitle = options.dataViews[0].categorical.values.source.displayName;
-                if (!this.formattingSettings.dataPointCard.defaultStackedBarChart.value) {
+                if (!this.formattingSettings.dataPointCard.flipChart.value) {
                     this.generateColumnChart(width, height, chartData, options, categoryTitle, true);
                 }
                 else {
@@ -226,45 +224,6 @@ export class Visual implements IVisual {
         }
 
 
-        // Fetching axis labels from metadata
-        var columns = options.dataViews[0].metadata.columns;
-        var xAxisLabelName: string; var yAxisLabelName: string;
-        columns.forEach(column => {
-            if (column.roles["category"]) {
-                xAxisLabelName = column.displayName;
-            } else if (column.roles["measure"]) {
-                yAxisLabelName = column.displayName;
-            }
-        });
-
-        // Conditional Labels
-        if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
-            // Add X-axis label
-            svg.append('text')
-                .attr('class', 'x-axis-label')
-                .attr('x', innerWidth / 2)
-                .attr('y', innerHeight + this.margin.bottom - 2)
-                .style('text-anchor', 'middle')
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-weight", "bold")
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .text(xAxisLabelName);
-
-            // Add Y-axis label
-            svg.append('text')
-                .attr('class', 'y-axis-label')
-                .attr('x', -innerHeight / 2)
-                .attr('y', -this.margin.left * 0.8)
-                .style('text-anchor', 'middle')
-                .attr('transform', 'rotate(-90)')
-                .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .style("font-weight", "bold")
-                .text(yAxisLabelName);
-
-        }
-
         // Create svg to represent data
         if (!isLegend) {
             svg.selectAll(".bar")
@@ -327,6 +286,44 @@ export class Visual implements IVisual {
                 .attr("y", d => yScaleColumn(d.value) - 20)
                 .attr("dy", ".75em")
                 .text(d => getFormattedValue(d.value));
+        }
+
+        // Fetching axis labels from metadata
+        var columns = options.dataViews[0].metadata.columns;
+        var xAxisLabelName: string; var yAxisLabelName: string;
+        columns.forEach(column => {
+            if (column.roles["category"]) {
+                xAxisLabelName = column.displayName;
+            } else if (column.roles["measure"]) {
+                yAxisLabelName = column.displayName;
+            }
+        });
+
+        if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
+            // Add X-axis label
+            svg.append('text')
+                .attr('class', 'x-axis-label')
+                .attr('x', innerWidth / 2)
+                .attr('y', innerHeight + this.margin.bottom - 2)
+                .style('text-anchor', 'middle')
+                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+                .style("font-weight", "bold")
+                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
+                .text(xAxisLabelName);
+
+            // Add Y-axis label
+            svg.append('text')
+                .attr('class', 'y-axis-label')
+                .attr('x', -innerHeight / 2)
+                .attr('y', -this.margin.left * 0.8)
+                .style('text-anchor', 'middle')
+                .attr('transform', 'rotate(-90)')
+                .style("fill", this.formattingSettings.dataPointCard.fontColor.value.value)
+                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
+                .style("font-weight", "bold")
+                .text(yAxisLabelName);
+
         }
 
         // Add tooltip
@@ -710,7 +707,7 @@ export class Visual implements IVisual {
                 .attr("class", "x-axis-stacked bar-chart")
                 .attr('transform', "translate(20, " + innerHeight + ")")
                 .call(d3.axisBottom(xScaleBar)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf());})
+                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
                     .tickSizeInner(-innerWidth)
                     .tickSizeOuter(0))
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -830,11 +827,11 @@ export class Visual implements IVisual {
     }
 
     // Method to fetch subcategories
-    private getSubCategories(data: ChartDataPoints[]): string[]{
+    private getSubCategories(data: ChartDataPoints[]): string[] {
         let innerCatagories: string[] = [];
         data.forEach((element) => {
-                innerCatagories.push(element.category);
-            })
+            innerCatagories.push(element.category);
+        })
         return innerCatagories;
     }
 
@@ -848,7 +845,7 @@ export class Visual implements IVisual {
         return colorStack;
     }
 
-    private getMinValue(data: ChartDataPoints[]): number{
+    private getMinValue(data: ChartDataPoints[]): number {
         var minValue: number = 0;
         minValue = minValue > d3.min(data, d => d.value) ? d3.min(data, d => d.value) : 0;
         return minValue;
@@ -868,7 +865,8 @@ export class Visual implements IVisual {
         });
 
         this.tooltipServiceWrapper.addTooltip(this.svg.selectAll("rect"),
-            (dataPoints: ChartDataPoints) => this.getTooltipData(dataPoints));
+            (dataPoints: ChartDataPoints) => this.getTooltipData(dataPoints),
+            (datapoint: ChartDataPoints) => datapoint.selectionID);
 
     }
 
