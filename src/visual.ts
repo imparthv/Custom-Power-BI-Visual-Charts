@@ -181,7 +181,7 @@ export class Visual implements IVisual {
 
         // draw x axis
         svg.append("g")
-            .attr("class", "x-axis-column-chart")
+            .attr("class", "x-axis")
             .attr('transform', "translate(0, " + innerHeight + ")")
             .call(d3.axisBottom(xScaleColumn))
             .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
@@ -201,79 +201,49 @@ export class Visual implements IVisual {
 
 
         // draw y axis
-        if (innerHeight < 240) {
-            svg.append("g")
-                .attr("class", "y-axis-column-chart")
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
-                .call(d3.axisLeft(yScaleColumn)
-                    .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0));
-        }
-        else {
-            svg.append("g")
-                .attr("class", "y-axis-column-chart")
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
-                .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0));
-        }
+        svg.append("g")
+            .attr("class", "y-axis")
+            .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+            .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
+            .call(d3.axisLeft(yScaleColumn)
+                .ticks(Math.max(4, Math.floor(height / 30)))
+                .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
+                .tickSizeInner(-innerWidth)
+                .tickSizeOuter(0));
 
 
         // Create svg to represent data
-        if (!isLegend) {
-            svg.selectAll(".bar")
-                .data(visualChartData)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => xScaleColumn(d.category))
-                .attr("width", xScaleColumn.bandwidth())
-                .attr("y", d => yScaleColumn(Math.max(0, d.value)))
-                .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
-                .style("fill", "steelblue")
-                .on("click", (d) => {
-                    this.selectionManager.select(d.selectionID).then((selectionId: ISelectionId[]) => {
-                        svg.selectAll(".bar").style({
-                            "fill-opacity": selectionId.length > 0 ?
-                                d => selectionId.indexOf(d.identity) >= 0 ? 1.0 : 0.5 :
-                                1.0
-                        } as any);
-                    });
-                });
-        }
-        else {
-            svg.selectAll(".bar")
-                .data(visualChartData)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => xScaleColumn(d.category))
-                .attr("width", xScaleColumn.bandwidth())
-                .attr("y", d => yScaleColumn(Math.max(0, d.value)))
-                .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
-                .style("fill", function (d, i) {
+        svg.selectAll(".bar")
+            .data(visualChartData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScaleColumn(d.category))
+            .attr("width", xScaleColumn.bandwidth())
+            .attr("y", d => yScaleColumn(Math.max(0, d.value)))
+            .attr("height", d => Math.abs(yScaleColumn(d.value) - yScaleColumn(0)))
+            .style("fill", function (d, i) {
+                if (!isLegend) {
+                    return "steelblue";
+                }
+                else {
                     return colorStack[i];
-                })
-                .on("click", (d) => {
-                    this.selectionManager.select(d.selectionID, true).then(
-                        ids => {
-                            this.svg.selectAll("rect").style({
-                                "fill-opacity": ids.length > 0 ?
-                                    d => ids.indexOf(d.selectionID) >= 0 ? 1.0 : 0.5 : 1.0
-                            } as any);
-                        }
-                    );
+                }
+            })
+            .on("click", (d) => {
+                this.selectionManager.select(d.selectionID).then((selectionId: ISelectionId[]) => {
+                    svg.selectAll(".bar").style({
+                        "fill-opacity": selectionId.length > 0 ?
+                            d => selectionId.indexOf(d.identity) >= 0 ? 1.0 : 0.5 :
+                            1.0
+                    } as any);
                 });
+            });
 
+        if (isLegend) {
             // Adding legend
             showLegend(svg, categoryName, subCategories, colorStack);
         }
-
 
         // Add text labels
         if (this.formattingSettings.dataPointCard.showDataLabels.value) {
@@ -288,17 +258,6 @@ export class Visual implements IVisual {
                 .text(d => getFormattedValue(d.value));
         }
 
-        // Fetching axis labels from metadata
-        var columns = options.dataViews[0].metadata.columns;
-        var xAxisLabelName: string; var yAxisLabelName: string;
-        columns.forEach(column => {
-            if (column.roles["category"]) {
-                xAxisLabelName = column.displayName;
-            } else if (column.roles["measure"]) {
-                yAxisLabelName = column.displayName;
-            }
-        });
-
         if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
             // Add X-axis label
             svg.append('text')
@@ -309,7 +268,13 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .text(xAxisLabelName);
+                .text((d) => {
+                    if (!isLegend) {
+                        return options.dataViews[0].categorical.categories[0].source.displayName;
+                    } else {
+                        return options.dataViews[0].categorical.values.source.displayName;
+                    }
+                });
 
             // Add Y-axis label
             svg.append('text')
@@ -322,7 +287,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
                 .style("font-weight", "bold")
-                .text(yAxisLabelName);
+                .text(options.dataViews[0].categorical.values[0].source.displayName);
 
         }
 
@@ -361,31 +326,16 @@ export class Visual implements IVisual {
             .range([0, innerWidth - 70]);
 
         // draw x axis and set tick numbers based on the width of the viewport
-        if (width < 300) {
-            svg.append("g")
-                .attr("class", "x-axis-bar-chart")
-                .attr('transform', "translate(20, " + innerHeight + ")")
-                .call(d3.axisBottom(xScaleBar)
-                    .ticks(3)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0))
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
-
-        }
-        else {
-            svg.append("g")
-                .attr("class", "x-axis-bar-chart")
-                .attr('transform', "translate(20, " + innerHeight + ")")
-                .call(d3.axisBottom(xScaleBar)
-                    .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0))
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
-        }
+        svg.append("g")
+            .attr("class", "x-axis-bar-chart")
+            .attr('transform', "translate(20, " + innerHeight + ")")
+            .call(d3.axisBottom(xScaleBar)
+                .ticks(Math.max(3, Math.floor(width / 80)))
+                .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
+                .tickSizeInner(-innerWidth)
+                .tickSizeOuter(0))
+            .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+            .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
 
         // scale y axis
         var yScaleBar = d3.scaleBand()
@@ -417,17 +367,6 @@ export class Visual implements IVisual {
                 }
             });
 
-        // Fetching axis labels from metadata
-        var columns = options.dataViews[0].metadata.columns;
-        var xAxisLabelName: string; var yAxisLabelName: string;
-        columns.forEach(column => {
-            if (column.roles["measure"]) {
-                xAxisLabelName = column.displayName;
-            } else if (column.roles["category"]) {
-                yAxisLabelName = column.displayName;
-            }
-        });
-
         // Conditional Axis Labels
         if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
             // Add X-axis label
@@ -439,7 +378,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .text(xAxisLabelName);
+                .text(options.dataViews[0].categorical.values[0].source.displayName);
 
             // Add Y-axis label
             svg.append('text')
@@ -452,40 +391,37 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
                 .style("font-weight", "bold")
-                .text(yAxisLabelName);
+                .text((d) => {
+                    if (!isLegend) {
+                        return options.dataViews[0].categorical.categories[0].source.displayName;
+                    } else {
+                        return options.dataViews[0].categorical.values.source.displayName;
+                    }
+                });
 
         }
 
         // Create svg to represent data
-        if (!isLegend) {
-            svg.selectAll(".bar")
-                .data(visualChartData)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr('transform', "translate(20, 0)")
-                .attr("y", d => yScaleBar(d.category))
-                .attr("height", yScaleBar.bandwidth())
-                .attr("x", d => (d.value >= 0) ? xScaleBar(0) : xScaleBar(d.value))
-                .attr("width", d => Math.abs(xScaleBar(0) - xScaleBar(d.value)))
-                .style("fill", "steelblue");
-        }
-
-        else {
-            svg.selectAll(".bar")
-                .data(visualChartData)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr('transform', "translate(20, 0)")
-                .attr("y", d => yScaleBar(d.category))
-                .attr("height", yScaleBar.bandwidth())
-                .attr("x", d => (d.value >= 0) ? xScaleBar(0) : xScaleBar(d.value))
-                .attr("width", d => Math.abs(xScaleBar(d.value) - xScaleBar(0)))
-                .style("fill", function (d, i) {
+        svg.selectAll(".bar")
+            .data(visualChartData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr('transform', "translate(20, 0)")
+            .attr("y", d => yScaleBar(d.category))
+            .attr("height", yScaleBar.bandwidth())
+            .attr("x", d => (d.value >= 0) ? xScaleBar(0) : xScaleBar(d.value))
+            .attr("width", d => Math.abs(xScaleBar(0) - xScaleBar(d.value)))
+            .style("fill", function (d, i) {
+                if (!isLegend) {
+                    return "steelblue";
+                }
+                else {
                     return colorStack[i];
-                });
+                }
+            });
 
+        if (isLegend) {
             // Adding legend
             showLegend(svg, categoryName, subCategories, colorStack);
         }
@@ -569,38 +505,15 @@ export class Visual implements IVisual {
             .range([innerHeight, 0]);
 
         // draw y axis and set text labels based on viewport height
-        if (innerHeight < 240) {
-            svg.append("g")
-                .attr("class", "y-axis-stacked-column-chart")
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
-                .call(d3.axisLeft(yScaleColumn)
-                    .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0));
-        }
-        else {
-            svg.append("g")
-                .attr("class", "y-axis-stacked-column-chart")
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
-                .call(d3.axisLeft(yScaleColumn)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0));
-        }
-
-        // Fetching axis labels from metadata
-        var columns = options.dataViews[0].metadata.columns;
-        var xAxisLabelName: string; var yAxisLabelName: string;
-        columns.forEach(column => {
-            if (column.roles["category"]) {
-                xAxisLabelName = column.displayName;
-            } else if (column.roles["measure"]) {
-                yAxisLabelName = column.displayName;
-            }
-        });
+        svg.append("g")
+            .attr("class", "y-axis-stacked-column-chart")
+            .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+            .style("font-size", this.formattingSettings.dataPointCard.fontSize.value)
+            .call(d3.axisLeft(yScaleColumn)
+                .ticks(Math.max(3, Math.floor(height / 80)))
+                .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
+                .tickSizeInner(-innerWidth)
+                .tickSizeOuter(0));
 
         if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
             // Add X-axis label
@@ -612,7 +525,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .text(xAxisLabelName);
+                .text(options.dataViews[0].categorical.categories[0].source.displayName);
 
             // Add Y-axis label
             svg.append('text')
@@ -625,8 +538,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
                 .style("font-weight", "bold")
-                .text(yAxisLabelName);
-
+                .text(options.dataViews[0].categorical.values[0].source.displayName);
         }
 
         // Create the bars
@@ -690,30 +602,16 @@ export class Visual implements IVisual {
             .range([0, innerWidth - 10]);
 
         // draw x axis and set tick numbers based on viewport width
-        if (innerWidth < 400) {
-            svg.append("g")
-                .attr("class", "x-axis-stacked bar-chart")
-                .attr('transform', "translate(20, " + innerHeight + ")")
-                .call(d3.axisBottom(xScaleBar)
-                    .ticks(4)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0))
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
-        }
-        else {
-            svg.append("g")
-                .attr("class", "x-axis-stacked bar-chart")
-                .attr('transform', "translate(20, " + innerHeight + ")")
-                .call(d3.axisBottom(xScaleBar)
-                    .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
-                    .tickSizeInner(-innerWidth)
-                    .tickSizeOuter(0))
-                .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
-                .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
-        }
-
+        svg.append("g")
+            .attr("class", "x-axis-bar-chart")
+            .attr('transform', "translate(20, " + innerHeight + ")")
+            .call(d3.axisBottom(xScaleBar)
+                .ticks(Math.max(3, Math.floor(width / 80)))
+                .tickFormat(function (d) { return getFormattedValue(d.valueOf()); })
+                .tickSizeInner(-innerWidth)
+                .tickSizeOuter(0))
+            .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
+            .style("font-size", this.formattingSettings.dataPointCard.fontSize.value);
 
         // scale y axis
         var yScaleBar = d3.scaleBand()
@@ -745,17 +643,6 @@ export class Visual implements IVisual {
                 }
             });
 
-        // Fetching axis labels from metadata
-        var columns = options.dataViews[0].metadata.columns;
-        var xAxisLabelName: string; var yAxisLabelName: string;
-        columns.forEach(column => {
-            if (column.roles["measure"]) {
-                xAxisLabelName = column.displayName;
-            } else if (column.roles["category"]) {
-                yAxisLabelName = column.displayName;
-            }
-        });
-
         if (this.formattingSettings.dataPointCard.showAxisLabels.value) {
             // Add X-axis label
             svg.append('text')
@@ -766,7 +653,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-weight", "bold")
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
-                .text(xAxisLabelName);
+                .text(options.dataViews[0].categorical.values[0].source.displayName);
 
             // Add Y-axis label
             svg.append('text')
@@ -779,7 +666,7 @@ export class Visual implements IVisual {
                 .style("font-family", this.formattingSettings.dataPointCard.fontFamily.value)
                 .style("font-size", this.formattingSettings.dataPointCard.fontSize.value + 2)
                 .style("font-weight", "bold")
-                .text(yAxisLabelName);
+                .text(options.dataViews[0].categorical.categories[0].source.displayName);
 
         }
 
