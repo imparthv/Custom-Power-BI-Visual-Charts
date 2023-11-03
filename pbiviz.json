@@ -1,11 +1,11 @@
 {
     "visual": {
         "name": "stackedChartPowerBI",
-        "displayName": "Stacked Chart Power BI",
+        "displayName": "Stacked Charts - CloudServe Systems",
         "guid": "StackedChartsBI0F5F9D068B57455EB47C1F1664F829F6",
         "visualClassName": "Visual",
         "version": "1.0.0.0",
-        "description": "Stacked Column and Bar Chart BY CloudServe Systems",
+        "description": "Stacked Column and Bar Chart by CloudServe Systems",
         "supportUrl": "https://cloudservesystems.com/",
         "gitHubUrl": ""
     },
