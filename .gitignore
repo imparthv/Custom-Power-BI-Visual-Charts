@@ -4,3 +4,4 @@
 /.tmp
 /webpack.statistics.dev.html
 /dist
+/webpack.statistics.prod.html
