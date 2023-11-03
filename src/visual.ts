@@ -484,7 +484,7 @@ export class Visual implements IVisual {
             .padding(0.4)
             .paddingInner(0.5);
 
-        // draw x axis and set tick numbers based on viewport width
+        // draw x axis 
         svg.append("g")
             .attr("class", "x-axis-stacked-column-chart")
             .attr('transform', "translate(0, " + innerHeight + ")")
