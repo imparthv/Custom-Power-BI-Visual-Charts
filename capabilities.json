@@ -171,5 +171,10 @@
         "supportEnhancedTooltips": true
     },
     "supportsLandingPage": true,
-    "privileges": []
+    "privileges": [
+        {
+            "name": "ExportContent",
+            "essential": true
+        }
+    ]
 }
