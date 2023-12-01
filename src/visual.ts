@@ -1,6 +1,10 @@
 "use strict";
 
+/// <reference types="d3" />
+ 
+
 import * as d3 from "d3";
+import { BaseType } from "d3";
 import powerbi from "powerbi-visuals-api";
 
 // Essential imports dealing with visual development on the BI interface
@@ -55,6 +59,10 @@ export class Visual implements IVisual {
         this.svg = d3.select(options.element)
             .append("svg")
             .classed("custom-chart", true);
+
+        // Handle Context Menu
+        this.handleContextMenu();
+
     }
 
     public update(options: VisualUpdateOptions) {
@@ -149,7 +157,7 @@ export class Visual implements IVisual {
         return div;
     }
 
-
+    // Method to Generate Column Chart
     private generateColumnChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
         // clearing previous format
         this.svg.selectAll("*").remove();
@@ -295,6 +303,7 @@ export class Visual implements IVisual {
         this.viewTooltip();
     }
 
+    // Method to Generate Bar Chart
     private generateBarChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, categoryName?: string, isLegend?: boolean) {
         // clearing previous format
         this.svg.selectAll("*").remove();
@@ -444,7 +453,7 @@ export class Visual implements IVisual {
         this.viewTooltip();
     }
 
-    // generate stacked column chart with legend
+    // Method to Generate Stacked Column Chart with Legend
     private generateStackedColumnChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
         // clearing previous format
         this.svg.selectAll("*").remove();
@@ -561,7 +570,7 @@ export class Visual implements IVisual {
         // this.viewTooltip(visualChartData);
     }
 
-    // Method for generating stacked bar chart with legend
+    // Method to Generate Stacked Bar Chart with Legend
     private generateStackedBarChart(width: number, height: number, visualChartData: ChartDataPoints[], options: VisualUpdateOptions, stackCategory: string) {
         // clearing previous format
         this.svg.selectAll("*").remove();
@@ -763,6 +772,20 @@ export class Visual implements IVisual {
             displayName: value.category,
             value: getFormattedValue(value.value)
         }];
+    }
+
+    // Method to handle Context Menu
+    private handleContextMenu() {
+        this.svg.on('contextmenu', (event) => {
+            const mouseEvent: MouseEvent = event;
+            const eventTarget: EventTarget = mouseEvent.target;
+            const dataPoint: any = d3.select(<BaseType>eventTarget).datum();
+            this.selectionManager.showContextMenu(dataPoint ? dataPoint.selectionId : {}, {
+                x: mouseEvent.clientX,
+                y: mouseEvent.clientY
+            });
+            mouseEvent.preventDefault();
+        });
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {
